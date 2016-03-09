@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "main:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "sizeof(text)">
+            </PersistentString>
+            <PersistentString
+               value = "mtext[7]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "divide_text:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "div_format:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "text[6]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "divide:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "text[1]">
+            </PersistentString>
+            <PersistentString
+               value = "sizeof text">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "read_text:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "text[61]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
