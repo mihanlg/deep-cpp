@@ -3,10 +3,8 @@
 #include <ctype.h>
 #include <string.h>
 #include <stddef.h>
-//#include <errno.h>
 
 #define BUFSIZE 32
-#define TPLSIZE 10
 #define NCCOEF 2
 #define ERRMSG "[error]"
 #define DIVO "<div>"
@@ -19,10 +17,10 @@ void error(void) {
     printf("%s\n", ERRMSG);
 }
 
-void free_struct(char** structured) {
+void free_struct(char** structured, size_t size) {
     if(structured != NULL) {
         size_t i = 0;
-        while(structured[i] != NULL) {
+        while(i != size) {
             free(structured[i++]);
         }
         free(structured);
@@ -31,7 +29,7 @@ void free_struct(char** structured) {
 
 char* resize_str(char *str, const size_t size, size_t *capacity) {
     if (size + BUFSIZE >= *capacity) {
-        size_t newcapacity = *capacity == 0 ? 8*BUFSIZE : 2*(*capacity);
+        size_t newcapacity = *capacity == 0 ? NCCOEF*BUFSIZE : NCCOEF*(*capacity);
         char* tmpstr = (char*)realloc(str, newcapacity*sizeof(char));
         if (tmpstr == NULL) {
             free(str);
@@ -45,10 +43,10 @@ char* resize_str(char *str, const size_t size, size_t *capacity) {
 
 char** resize_struct(char **structured, const size_t size, size_t *capacity) {
     if (size + BUFSIZE >= *capacity) {
-        size_t newcapacity = *capacity == 0 ? 2*BUFSIZE : 2*(*capacity);
+        size_t newcapacity = *capacity == 0 ? NCCOEF*BUFSIZE : NCCOEF*(*capacity);
         char **tmpstruct = (char**)realloc(structured, newcapacity*sizeof(char*));
         if (tmpstruct == NULL) {
-            free_struct(structured);
+            free_struct(structured, size);
             return NULL;
         }
         structured = tmpstruct;
@@ -68,6 +66,8 @@ char* read_input(void) {
         size += strlen(buf);
         memset(buf, (char)0, BUFSIZE*sizeof(char));
     }
+    if ((input = resize_str(input, size, &capacity)) == NULL) return NULL;
+    input[size] = (char)0;
     return input;
 }
 
@@ -90,89 +90,108 @@ char* trim(char *str, size_t len) {
     return len == 0 ? str : strdup_alloc(p, len);
 }
 
-char** struct_input(char* input) {
+char** struct_input(char* input, size_t *sz) {
     char** structured = NULL;
     size_t size = 0, capacity = 0;
     char *ptr, *ptrO, *ptrC, *end;
     ptr = ptrO = ptrC = NULL;
-    end = input + strlen(input);
-    ptrdiff_t step = 0;
-    
-    while(ptrcmp(input, end) < 0) {
-        ptrO = strstr(input, DIVO);
-        ptrC = strstr(input, DIVC);
-        if ((ptrcmp(ptrO, ptrC) < 0) && ptrO != NULL) {
-            ptr = ptrO, step = DIVOLEN;
-        }
-        else if (ptrC != NULL) {
-            ptr = ptrC, step = DIVCLEN;
-        }
-        else ptr = end;
-        
-        char *tmp = NULL;
-        //ASCI-string before tag
-        if (input != ptr && (tmp = trim(input, ptr-input)) != input) {
-            if (tmp == NULL || (structured = resize_struct(structured, size, &capacity)) == NULL) {
-                free(tmp);
-                free_struct(structured);
-                return NULL;
+    //using strtok to divide lines
+    char *sep_input = strtok(input, "\n");
+    while (sep_input != NULL) {
+        end = sep_input + strlen(sep_input);
+        ptrdiff_t step = 0;
+        while(ptrcmp(sep_input, end) < 0) {
+            //finding first of <div> or </div> tags
+            ptrO = strstr(sep_input, DIVO);
+            ptrC = strstr(sep_input, DIVC);
+            if (((ptrcmp(ptrO, ptrC) < 0) || ptrC == NULL) && ptrO != NULL) {
+                ptr = ptrO, step = DIVOLEN;
             }
-            structured[size++] = tmp;
-        }
-        //TAG
-        if (ptr != end) {
-            tmp = strdup_alloc(ptr, step);
-            if (tmp == NULL || (structured = resize_struct(structured, size, &capacity)) == NULL) {
-                free(tmp);
-                free_struct(structured);
-                return NULL;
+            else if (ptrC != NULL) {
+                ptr = ptrC, step = DIVCLEN;
             }
-            structured[size++] = tmp;
+            else ptr = end;
+            
+            //ASCI-string before tag
+            char *tmp = NULL;
+            if (sep_input != ptr && (tmp = trim(sep_input, ptr-sep_input)) != sep_input) {
+                if (tmp == NULL || (structured = resize_struct(structured, size, &capacity)) == NULL) {
+                    free(tmp);
+                    free_struct(structured, size);
+                    return NULL;
+                }
+                structured[size++] = tmp;
+            }
+            //TAG
+            if (ptr != end) {
+                tmp = strdup_alloc(ptr, step);
+                if (tmp == NULL || (structured = resize_struct(structured, size, &capacity)) == NULL) {
+                    free(tmp);
+                    free_struct(structured, size);
+                    return NULL;
+                }
+                structured[size++] = tmp;
+            }
+            //NEXT ITERATION
+            sep_input = ptr + step;
         }
-        //NEXT ITERATION
-        input = ptr + step;
+        sep_input = strtok (NULL, "\n");
     }
+    //Add NULL to the end
+    if((structured = resize_struct(structured, size, &capacity)) == NULL) {
+        free_struct(structured, size);
+        return NULL;
+    }
+    structured[size] = NULL;
+    *sz = size;
     return structured;
 }
 
-char** div_format(char** structured) {
+char** div_format(char** structured, size_t sz) {
     if (structured == NULL) return NULL;
     char **formated = NULL;
     size_t size = 0, capacity = 0;
     int stsize = 0;
-    while (structured[size] != NULL) {
+    //format structured text
+    while (size != sz) {
+        //move left if </div> met
         if(strncmp(structured[size], DIVC, DIVCLEN) == 0) stsize--;
+        //check stack of tags
         if((stsize < 0) || (formated = resize_struct(formated, size, &capacity)) == NULL) {
-            free_struct(formated);
+            free_struct(formated, size);
             return NULL;
         }
         size_t len = strlen(structured[size]);
         size_t offset = IND*stsize;
+        //put str
         if ((formated[size] = (char *)malloc((offset+len+1)*sizeof(char))) == NULL) {
-            free_struct(formated);
+            free_struct(formated, size);
             return NULL;
         }
         memset(formated[size], ' ', offset*sizeof(char));
         memcpy(formated[size]+offset, structured[size], (len+1)*sizeof(char));
+        //move right if <div> met
         if(strncmp(structured[size], DIVO, DIVOLEN) == 0) stsize++;
         size++;
     }
+    //Add NULL to the end
     if((formated = resize_struct(formated, size, &capacity)) == NULL) {
-        free_struct(formated);
+        free_struct(formated, size);
         return NULL;
     }
     formated[size] = NULL;
+    //Check stack size == 0
     if (stsize != 0) {
-        free_struct(formated);
+        free_struct(formated, size);
         return NULL;
     }
     return formated;
 }
 
-void print_struct(char** structured) {
+void print_struct(char** structured, size_t size) {
     if(structured != NULL) {
         size_t i = 0;
-        while(structured[i] != NULL) {
+        while(i != size) {
             printf("%s\n", structured[i++]);
         }
     }
@@ -184,22 +203,22 @@ int main(int argc, const char * argv[]) {
         error(); //memory allocation fail
         return 0;
     }
-    //printf("%s\n", input);
     
-    char **structured = struct_input(input);
+    size_t size = 0; //save size of structured text to this variable
+    char **structured = struct_input(input, &size);
     free(input);
     if (structured == NULL) {
         error(); //memory allocation fail
         return 0;
     }
     
-    char **formated = div_format(structured);
-    free_struct(structured);
+    char **formated = div_format(structured, size);
+    free_struct(structured, size);
     if (formated == NULL) {
         error(); //wrong format or memory allocation fail
         return 0;
     }
-    print_struct(formated);
-    free_struct(formated);
+    print_struct(formated, size);
+    free_struct(formated, size);
     return 0;
 }

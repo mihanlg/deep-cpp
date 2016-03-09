@@ -19,10 +19,10 @@ void error(void) {
     printf("%s\n", ERRMSG);
 }
 
-void free_struct(char** structured, size_t size) {
+void free_struct(char** structured) {
     if(structured != NULL) {
         size_t i = 0;
-        while(i != size) {
+        while(structured[i] != NULL) {
             free(structured[i++]);
         }
         free(structured);
@@ -48,7 +48,7 @@ char** resize_struct(char **structured, const size_t size, size_t *capacity) {
         size_t newcapacity = *capacity == 0 ? 2*BUFSIZE : 2*(*capacity);
         char **tmpstruct = (char**)realloc(structured, newcapacity*sizeof(char*));
         if (tmpstruct == NULL) {
-            free_struct(structured, size);
+            free_struct(structured);
             return NULL;
         }
         structured = tmpstruct;
@@ -90,7 +90,7 @@ char* trim(char *str, size_t len) {
     return len == 0 ? str : strdup_alloc(p, len);
 }
 
-char** struct_input(char* input, size_t *sz) {
+char** struct_input(char* input) {
     char** structured = NULL;
     size_t size = 0, capacity = 0;
     char *ptr, *ptrO, *ptrC, *end;
@@ -114,7 +114,7 @@ char** struct_input(char* input, size_t *sz) {
         if (input != ptr && (tmp = trim(input, ptr-input)) != input) {
             if (tmp == NULL || (structured = resize_struct(structured, size, &capacity)) == NULL) {
                 free(tmp);
-                free_struct(structured, size);
+                free_struct(structured);
                 return NULL;
             }
             structured[size++] = tmp;
@@ -124,7 +124,7 @@ char** struct_input(char* input, size_t *sz) {
             tmp = strdup_alloc(ptr, step);
             if (tmp == NULL || (structured = resize_struct(structured, size, &capacity)) == NULL) {
                 free(tmp);
-                free_struct(structured, size);
+                free_struct(structured);
                 return NULL;
             }
             structured[size++] = tmp;
@@ -132,25 +132,24 @@ char** struct_input(char* input, size_t *sz) {
         //NEXT ITERATION
         input = ptr + step;
     }
-    *sz = size;
     return structured;
 }
 
-char** div_format(char** structured, size_t sz) {
+char** div_format(char** structured) {
     if (structured == NULL) return NULL;
     char **formated = NULL;
     size_t size = 0, capacity = 0;
     int stsize = 0;
-    while (size != sz) {
+    while (structured[size] != NULL) {
         if(strncmp(structured[size], DIVC, DIVCLEN) == 0) stsize--;
         if((stsize < 0) || (formated = resize_struct(formated, size, &capacity)) == NULL) {
-            free_struct(formated, size);
+            free_struct(formated);
             return NULL;
         }
         size_t len = strlen(structured[size]);
         size_t offset = IND*stsize;
         if ((formated[size] = (char *)malloc((offset+len+1)*sizeof(char))) == NULL) {
-            free_struct(formated, size);
+            free_struct(formated);
             return NULL;
         }
         memset(formated[size], ' ', offset*sizeof(char));
@@ -159,21 +158,21 @@ char** div_format(char** structured, size_t sz) {
         size++;
     }
     if((formated = resize_struct(formated, size, &capacity)) == NULL) {
-        free_struct(formated, size);
+        free_struct(formated);
         return NULL;
     }
     formated[size] = NULL;
     if (stsize != 0) {
-        free_struct(formated, size);
+        free_struct(formated);
         return NULL;
     }
     return formated;
 }
 
-void print_struct(char** structured, size_t size) {
+void print_struct(char** structured) {
     if(structured != NULL) {
         size_t i = 0;
-        while(i != size) {
+        while(structured[i] != NULL) {
             printf("%s\n", structured[i++]);
         }
     }
@@ -187,21 +186,20 @@ int main(int argc, const char * argv[]) {
     }
     //printf("%s\n", input);
     
-    size_t size = 0;
-    char **structured = struct_input(input, &size);
+    char **structured = struct_input(input);
     free(input);
     if (structured == NULL) {
         error(); //memory allocation fail
         return 0;
     }
     
-    char **formated = div_format(structured, size);
-    free_struct(structured, size);
+    char **formated = div_format(structured);
+    free_struct(structured);
     if (formated == NULL) {
         error(); //wrong format or memory allocation fail
         return 0;
     }
-    print_struct(formated, size);
-    free_struct(formated, size);
+    print_struct(formated);
+    free_struct(formated);
     return 0;
 }
