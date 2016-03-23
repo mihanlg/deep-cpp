@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "scan_expr:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "get_vec:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "ptr">
+            </PersistentString>
+            <PersistentString
+               value = "num">
+            </PersistentString>
+            <PersistentString
+               value = "size">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "mult:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "v2">
+            </PersistentString>
+            <PersistentString
+               value = "v1">
+            </PersistentString>
+            <PersistentString
+               value = "vec">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "execute:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "sub:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "min">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "wrap_number:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "number">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "poliz:main.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "st_vec-&gt;next-&gt;next-&gt;next">
+            </PersistentString>
+            <PersistentString
+               value = "st_vec">
+            </PersistentString>
+            <PersistentString
+               value = "st_vec-&gt;next">
+            </PersistentString>
+            <PersistentString
+               value = "st_vec-&gt;next-&gt;next">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "pop_vec:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "scan_numb:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "get_number:main.c">
+      </ContextState>
+      <ContextState
+         contextName = "scan_vec:main.c">
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
